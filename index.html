@@ -264,7 +264,7 @@
       <form onsubmit="verifyAdminPassword(event)" class="space-y-3">
         <div>
           <div class="relative">
-            <input type="password" id="adminPasswordInput" required placeholder="請輸入管理者密碼 (預設: puli)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <input type="password" id="adminPasswordInput" required placeholder="請輸入管理者密碼" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
               <i id="pwdEyeIcon" class="fa-solid fa-eye"></i>
             </button>
@@ -293,13 +293,13 @@
     ];
 
     const SEED_PARTICIPANTS = {
-      "shift_tue_lib": ["幸敏環", "莊淑凰", "廖家誼"],
-      "shift_fri_night": ["劉奕呈", "莊淑凰", "陳素琴", "柯沛玨"],
-      "shift_sat_morn": ["辛慧晴", "劉奕呈", "廖家誼"],
-      "shift_sat_afternoon": ["劉奕呈", "黃玲瑜", "柯沛玨"]
+      "shift_tue_lib": [],
+      "shift_fri_night": [],
+      "shift_sat_morn": ["廖家誼"],
+      "shift_sat_afternoon": []
     };
 
-    const ADMIN_PASSWORD = "puli";
+    const ADMIN_PASSWORD = "1914";
 
     let shiftTemplates = [];
     let registrations = {};
