@@ -32,21 +32,27 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between antialiased selection:bg-teal-500 selection:text-white">
 
   <header class="bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-600 text-white shadow-md sticky top-0 z-30">
-    <div class="max-w-4xl mx-auto px-4 py-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div class="max-w-4xl mx-auto px-4 py-3.5 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex items-center gap-3 text-center sm:text-left">
         <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center text-teal-100 shadow-inner shrink-0">
           <i class="fa-solid fa-book-open text-xl"></i>
         </div>
         <div>
-          <h1 class="text-xl sm:text-2xl font-extrabold tracking-wide text-white">埔里會眾展示架安排</h1>
-          <p id="weekSubtitle" class="text-xs text-teal-100 font-medium mt-0.5">每週六 16:00 自動輪替下一週班表</p>
+          <h1 class="text-lg sm:text-xl font-extrabold tracking-wide text-white">埔里會眾展示架安排</h1>
+          <p id="weekSubtitle" class="text-2xs text-teal-100 font-medium mt-0.5">每週六 16:00 自動輪替下一週班表</p>
         </div>
       </div>
       
-      <!-- 模擬測試切換按鈕 -->
-      <div class="flex items-center gap-2 bg-black/15 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-xs">
-        <span class="text-teal-100 font-medium">當前模擬狀態:</span>
-        <button id="simToggleBtn" onclick="toggleSimulatedWeek()" class="px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white font-bold rounded-lg transition flex items-center gap-1.5">
+      <!-- 右側控制區：模擬切換與管理權限狀態 -->
+      <div class="flex items-center gap-2 flex-wrap justify-center">
+        <!-- 管理員權限按鈕 -->
+        <button id="adminStatusBtn" onclick="toggleAdminSession()" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30 font-bold rounded-xl text-xs transition flex items-center gap-1.5" title="點擊解鎖/切換管理者權限">
+          <i id="adminLockIcon" class="fa-solid fa-lock text-amber-300"></i>
+          <span id="adminStatusLabel">管理者權限: 未解鎖</span>
+        </button>
+
+        <!-- 模擬週切換按鈕 -->
+        <button id="simToggleBtn" onclick="toggleSimulatedWeek()" class="px-2.5 py-1 bg-white/15 hover:bg-white/25 text-teal-50 border border-white/20 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
           <i class="fa-solid fa-clock"></i>
           <span id="simToggleLabel">當週班表</span>
         </button>
@@ -56,6 +62,7 @@
 
   <main class="max-w-4xl w-full mx-auto px-4 py-6 flex-grow space-y-6">
     
+    <!-- Tab 切換按鈕 (預設第一個) -->
     <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex gap-1">
       <button id="tabBtnForm" onclick="switchTab('form')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-teal-600 text-white shadow">
         <i class="fa-solid fa-pen-to-square"></i>
@@ -67,6 +74,7 @@
       </button>
     </div>
 
+    <!-- 頁面 1: 表單填寫報名 (預設顯示) -->
     <section id="viewForm" class="space-y-4">
       <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
         
@@ -79,8 +87,8 @@
             <p class="text-xs text-slate-500 mt-1">請填寫您的姓名並勾選可參與的班次（可複選多個時段）</p>
           </div>
 
-          <button onclick="requestAdminAuth(() => openShiftModal())" class="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0">
-            <i class="fa-solid fa-plus text-teal-600"></i>
+          <button onclick="requestAdminAuth(() => openShiftModal())" class="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0 shadow-sm">
+            <i class="fa-solid fa-circle-plus text-teal-600"></i>
             新增/管理時段
           </button>
         </div>
@@ -119,6 +127,7 @@
       </div>
     </section>
 
+    <!-- 頁面 2: 即時報名名冊 -->
     <section id="viewRoster" class="hidden space-y-4">
       <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 space-y-4">
         
@@ -129,7 +138,7 @@
               <i class="fa-solid fa-users text-teal-600"></i>
               班表報名名冊
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">點擊「編輯/刪除」可管理班次，點擊「✕」可調整人員名單</p>
+            <p class="text-xs text-slate-500 mt-0.5">點擊「編輯/刪除」可管理班次，點擊「✕」可移除成員名單</p>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
@@ -195,24 +204,29 @@
     </div>
   </div>
 
-  <!-- 時段新增/編輯彈窗 Modal -->
+  <!-- 時段新增/編輯彈窗 Modal (已完全修正) -->
   <div id="shiftEditModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex items-center gap-3 text-teal-600">
-        <div class="w-10 h-10 rounded-2xl bg-teal-100 flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-calendar-plus text-lg"></i>
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-3 text-teal-600">
+          <div class="w-10 h-10 rounded-2xl bg-teal-100 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-calendar-pen text-lg"></i>
+          </div>
+          <div>
+            <h3 id="shiftModalTitle" class="text-base font-bold text-slate-900">新增排班時段</h3>
+            <p class="text-2xs text-slate-500">設定輪值時間、地點與說明內容</p>
+          </div>
         </div>
-        <div>
-          <h3 id="shiftModalTitle" class="text-base font-bold text-slate-900">新增排班時段</h3>
-          <p class="text-2xs text-slate-500">設定會眾展示架的輪值時間與地點</p>
-        </div>
+        <button type="button" onclick="closeShiftModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
 
-      <form onsubmit="saveShiftSlot(event)" class="space-y-3">
+      <form onsubmit="saveShiftSlot(event)" class="space-y-3.5">
         <input type="hidden" id="editShiftId">
         
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">星期 / 輪值日</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">星期 / 輪值日 <span class="text-rose-500">*</span></label>
           <select id="modalDayIndex" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
             <option value="0">星期日</option>
             <option value="1">星期一</option>
@@ -225,16 +239,16 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">時間範圍</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">時間範圍 <span class="text-rose-500">*</span></label>
           <input type="text" id="modalTime" required placeholder="例如: 14:30 - 16:00" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">地點</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">地點名稱 <span class="text-rose-500">*</span></label>
           <input type="text" id="modalLocation" required placeholder="例如: 鎮立圖書館" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
         </div>
 
-        <div class="flex gap-2 justify-end pt-3">
+        <div class="flex gap-2 justify-end pt-3 border-t border-slate-100">
           <button type="button" onclick="closeShiftModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
             取消
           </button>
@@ -255,14 +269,14 @@
         </div>
         <div>
           <h3 class="text-base font-bold text-slate-900">管理者密碼驗證</h3>
-          <p class="text-2xs text-slate-500">請輸入管理權限密碼以繼續操作</p>
+          <p class="text-2xs text-slate-500">輸入密碼以解鎖管理權限</p>
         </div>
       </div>
 
       <form onsubmit="verifyAdminPassword(event)" class="space-y-3">
         <div>
           <div class="relative">
-            <input type="password" id="adminPasswordInput" required placeholder="請輸入管理者密碼" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <input type="password" id="adminPasswordInput" required placeholder="管理者密碼" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
               <i id="pwdEyeIcon" class="fa-solid fa-eye"></i>
             </button>
@@ -284,17 +298,17 @@
 
   <script>
     const DEFAULT_SHIFT_TEMPLATES = [
-      { id: "shift_tue_lib", dayIndex: 2, time: "14:30 - 16:00", location: "鎮立圖書館" },
-      { id: "shift_fri_night", dayIndex: 5, time: "19:00 - 21:00", location: "夜市" },
-      { id: "shift_sat_morn", dayIndex: 6, time: "07:30 - 08:30", location: "廖姊妹家" },
-      { id: "shift_sat_afternoon", dayIndex: 6, time: "15:00 - 17:00", location: "日月潭文武廟觀景台" }
+      { id: "shift_tue_lib", dayIndex: 2, time: "14:30 - 16:00", location: "鎮立圖書館", note: "" },
+      { id: "shift_fri_night", dayIndex: 5, time: "19:00 - 21:00", location: "夜市", note: "" },
+      { id: "shift_sat_morn", dayIndex: 6, time: "07:30 - 08:30", location: "廖姊妹家", note: "" },
+      { id: "shift_sat_afternoon", dayIndex: 6, time: "15:00 - 17:00", location: "日月潭文武廟觀景台", note: "" }
     ];
 
     const SEED_PARTICIPANTS = {
-      "shift_tue_lib": [],
-      "shift_fri_night": [],
-      "shift_sat_morn": ["廖家誼"],
-      "shift_sat_afternoon": []
+      "shift_tue_lib": ["幸敏環", "莊淑凰", "廖家誼"],
+      "shift_fri_night": ["劉奕呈", "莊淑凰", "陳素琴", "柯沛玨"],
+      "shift_sat_morn": ["辛慧晴", "劉奕呈", "廖家誼"],
+      "shift_sat_afternoon": ["劉奕呈", "黃玲瑜", "柯沛玨"]
     };
 
     const ADMIN_PASSWORD = "1914";
@@ -302,6 +316,7 @@
     let shiftTemplates = [];
     let registrations = {};
     let isSimulatedNextWeek = false;
+    let isAdminAuthenticated = false; // 管理者解鎖狀態
     let pendingDeleteTarget = null;
     let pendingAdminAction = null;
 
@@ -310,10 +325,11 @@
       loadTemplates();
       loadStorageData();
       renderAllViews();
+      updateAdminStatusUI();
     };
 
     function loadTemplates() {
-      const stored = localStorage.getItem('puli_cart_templates_v4');
+      const stored = localStorage.getItem('puli_cart_templates_v5');
       if (stored) {
         try {
           shiftTemplates = JSON.parse(stored);
@@ -326,11 +342,11 @@
     }
 
     function saveTemplates() {
-      localStorage.setItem('puli_cart_templates_v4', JSON.stringify(shiftTemplates));
+      localStorage.setItem('puli_cart_templates_v5', JSON.stringify(shiftTemplates));
     }
 
     function loadStorageData() {
-      const stored = localStorage.getItem('puli_cart_shifts_v4');
+      const stored = localStorage.getItem('puli_cart_shifts_v5');
       if (stored) {
         try {
           registrations = JSON.parse(stored);
@@ -343,7 +359,7 @@
     }
 
     function saveStorageData() {
-      localStorage.setItem('puli_cart_shifts_v4', JSON.stringify(registrations));
+      localStorage.setItem('puli_cart_shifts_v5', JSON.stringify(registrations));
     }
 
     function initSeedData() {
@@ -436,8 +452,9 @@
               <div class="font-bold text-slate-800 text-xs sm:text-sm">
                 ${shift.fullDateText} <span class="text-teal-700 ml-1 font-mono">${shift.time}</span>
               </div>
-              <div class="text-2xs text-slate-500 mt-0.5">
-                <i class="fa-solid fa-location-dot text-rose-500 mr-0.5"></i> 地點：${escapeHtml(shift.location)}
+              <div class="text-2xs text-slate-500 mt-0.5 flex items-center gap-2">
+                <span><i class="fa-solid fa-location-dot text-rose-500 mr-0.5"></i> 地點：${escapeHtml(shift.location)}</span>
+                ${shift.note ? `<span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${escapeHtml(shift.note)}</span>` : ''}
               </div>
             </div>
           </label>
@@ -489,8 +506,9 @@
                 <span class="font-extrabold text-slate-800 text-sm sm:text-base">${shift.fullDateText}</span>
                 <span class="bg-teal-600 text-white font-mono text-2xs px-2 py-0.5 rounded font-bold">${shift.time}</span>
               </div>
-              <div class="text-xs text-slate-600 mt-0.5 flex items-center gap-1">
-                <i class="fa-solid fa-location-dot text-rose-500"></i> 地點：<strong class="text-slate-800">${escapeHtml(shift.location)}</strong>
+              <div class="text-xs text-slate-600 mt-0.5 flex items-center gap-2">
+                <span><i class="fa-solid fa-location-dot text-rose-500"></i> 地點：<strong class="text-slate-800">${escapeHtml(shift.location)}</strong></span>
+                ${shift.note ? `<span class="bg-slate-200/80 text-slate-700 px-1.5 py-0.5 rounded text-2xs font-semibold">${escapeHtml(shift.note)}</span>` : ''}
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -618,6 +636,7 @@
       const daySelect = document.getElementById('modalDayIndex');
       const timeInput = document.getElementById('modalTime');
       const locationInput = document.getElementById('modalLocation');
+      const noteInput = document.getElementById('modalNote');
 
       if (shiftId) {
         const shift = shiftTemplates.find(s => s.id === shiftId);
@@ -627,12 +646,14 @@
         daySelect.value = shift.dayIndex;
         timeInput.value = shift.time;
         locationInput.value = shift.location;
+        noteInput.value = shift.note || '';
       } else {
         title.innerText = '新增排班時段';
         editIdInput.value = '';
         daySelect.value = 2;
         timeInput.value = '';
         locationInput.value = '';
+        noteInput.value = '';
       }
 
       modal.classList.remove('hidden');
@@ -648,6 +669,7 @@
       const dayIndex = parseInt(document.getElementById('modalDayIndex').value, 10);
       const time = document.getElementById('modalTime').value.trim();
       const location = document.getElementById('modalLocation').value.trim();
+      const note = document.getElementById('modalNote').value.trim();
 
       if (!time || !location) {
         showToast('warning', '請完整填寫時間與地點！');
@@ -660,6 +682,7 @@
           shift.dayIndex = dayIndex;
           shift.time = time;
           shift.location = location;
+          shift.note = note;
         }
       } else {
         const newId = 'shift_' + Date.now();
@@ -667,7 +690,8 @@
           id: newId,
           dayIndex: dayIndex,
           time: time,
-          location: location
+          location: location,
+          note: note
         });
         registrations[newId] = [];
       }
@@ -676,7 +700,7 @@
       saveStorageData();
       renderAllViews();
       closeShiftModal();
-      showToast('success', id ? '已修改時段設定！' : '已成功新增時段！');
+      showToast('success', id ? '已成功修改時段設定！' : '已成功新增排班時段！');
     }
 
     function confirmDeleteShift(shiftId) {
@@ -732,6 +756,12 @@
     }
 
     function requestAdminAuth(actionCallback) {
+      if (isAdminAuthenticated) {
+        // 已解鎖管理員狀態，直接執行該操作 (如開啟新增/編輯時段彈窗)
+        actionCallback();
+        return;
+      }
+
       pendingAdminAction = actionCallback;
       const modal = document.getElementById('adminAuthModal');
       const input = document.getElementById('adminPasswordInput');
@@ -754,13 +784,45 @@
       const err = document.getElementById('pwdErrorMsg');
 
       if (input.value === ADMIN_PASSWORD) {
+        isAdminAuthenticated = true;
+        updateAdminStatusUI();
         closeAdminAuthModal();
+        showToast('success', '管理者權限已解鎖！');
+
         if (typeof pendingAdminAction === 'function') {
-          pendingAdminAction();
+          const action = pendingAdminAction;
+          pendingAdminAction = null;
+          action();
         }
       } else {
         err.classList.remove('hidden');
         input.focus();
+      }
+    }
+
+    function toggleAdminSession() {
+      if (isAdminAuthenticated) {
+        isAdminAuthenticated = false;
+        updateAdminStatusUI();
+        showToast('info', '已鎖定管理者權限');
+      } else {
+        requestAdminAuth(() => {});
+      }
+    }
+
+    function updateAdminStatusUI() {
+      const btn = document.getElementById('adminStatusBtn');
+      const icon = document.getElementById('adminLockIcon');
+      const label = document.getElementById('adminStatusLabel');
+
+      if (isAdminAuthenticated) {
+        btn.className = "px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 font-bold rounded-xl text-xs transition flex items-center gap-1.5";
+        icon.className = "fa-solid fa-lock-open text-emerald-300";
+        label.innerText = "管理者: 已解鎖";
+      } else {
+        btn.className = "px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30 font-bold rounded-xl text-xs transition flex items-center gap-1.5";
+        icon.className = "fa-solid fa-lock text-amber-300";
+        label.innerText = "管理者權限: 未解鎖";
       }
     }
 
@@ -798,7 +860,7 @@
     function resetDataToSeed() {
       initSeedData();
       renderAllViews();
-      showToast('success', '已重置為範例資料！');
+      showToast('success', '已成功重置為預設範例資料！');
     }
 
     function copyRosterSummary() {
@@ -808,7 +870,7 @@
       shifts.forEach(s => {
         const list = registrations[s.id] || [];
         const namesStr = list.length > 0 ? list.map(p => p.name).join('、') : '尚無人報名';
-        text += `📌 ${s.fullDateText} (${s.time})\n📍 地點: ${s.location}\n👤 名單: ${namesStr} (${list.length}人)\n\n`;
+        text += `📌 ${s.fullDateText} (${s.time})\n📍 地點: ${s.location}${s.note ? ` (${s.note})` : ''}\n👤 名單: ${namesStr} (${list.length}人)\n\n`;
       });
 
       copyToClipboard(text);
