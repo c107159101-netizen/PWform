@@ -1,171 +1,251 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" class="h-full bg-slate-100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>埔里會眾展示架安排系統</title>
+  
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Inter & Noto Sans TC Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+            }
+          }
+        }
+      }
     }
-    .custom-scrollbar::-webkit-scrollbar {
+  </script>
+
+  <style>
+    /* Custom Scrollbar for better UI experience */
+    ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
-    .custom-scrollbar::-webkit-scrollbar-track {
+    ::-webkit-scrollbar-track {
       background: #f1f5f9;
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
+    ::-webkit-scrollbar-thumb {
       background: #cbd5e1;
-      border-radius: 4px;
+      border-radius: 9999px;
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
+    }
+    .text-2xs {
+      font-size: 0.65rem;
+      line-height: 0.85rem;
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between antialiased selection:bg-teal-500 selection:text-white">
+<body class="h-full text-slate-800 antialiased flex flex-col font-sans">
 
-  <header class="bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-600 text-white shadow-md sticky top-0 z-30">
-    <div class="max-w-4xl mx-auto px-4 py-3.5 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <div class="flex items-center gap-3 text-center sm:text-left">
-        <div class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center text-teal-100 shadow-inner shrink-0">
-          <i class="fa-solid fa-book-open text-xl"></i>
-        </div>
-        <div>
-          <h1 class="text-lg sm:text-xl font-extrabold tracking-wide text-white">埔里會眾展示架安排</h1>
-          <p id="weekSubtitle" class="text-2xs text-teal-100 font-medium mt-0.5">每週六 16:00 自動輪替下一週班表</p>
-        </div>
-      </div>
-      
-      <!-- 右側控制區：模擬切換與管理權限狀態 -->
-      <div class="flex items-center gap-2 flex-wrap justify-center">
-        <!-- 管理員權限按鈕 -->
-        <button id="adminStatusBtn" onclick="toggleAdminSession()" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30 font-bold rounded-xl text-xs transition flex items-center gap-1.5" title="點擊解鎖/切換管理者權限">
-          <i id="adminLockIcon" class="fa-solid fa-lock text-amber-300"></i>
-          <span id="adminStatusLabel">管理者權限: 未解鎖</span>
-        </button>
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
 
-        <!-- 模擬週切換按鈕 -->
-        <button id="simToggleBtn" onclick="toggleSimulatedWeek()" class="px-2.5 py-1 bg-white/15 hover:bg-white/25 text-teal-50 border border-white/20 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
-          <i class="fa-solid fa-clock"></i>
-          <span id="simToggleLabel">當週班表</span>
-        </button>
+  <!-- Header Banner -->
+  <header class="bg-gradient-to-r from-teal-700 via-teal-600 to-teal-800 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto px-4 py-4 sm:px-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0 shadow-inner">
+            <i class="fa-solid fa-calendar-check text-xl text-teal-200"></i>
+          </div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              埔里會眾展示架安排
+            </h1>
+            <p id="targetWeekBadge" class="text-xs text-teal-100/90 font-medium mt-0.5 flex items-center gap-1.5">
+              <i class="fa-regular fa-clock text-teal-200"></i>
+              <span>載入中...</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Top Right Control Buttons -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Admin Status Toggle Button -->
+          <button id="adminStatusBtn" onclick="toggleAdminLock()" 
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm bg-teal-800/60 hover:bg-teal-800 text-teal-100 border border-teal-500/30">
+            <i id="adminLockIcon" class="fa-solid fa-lock text-amber-300"></i>
+            <span id="adminStatusText">管理者權限: 已鎖定</span>
+          </button>
+
+          <!-- Time Simulation Switcher -->
+          <button onclick="toggleTimeSimModal()" 
+            title="測試每週六 16:00 自動輪替日期機制"
+            class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-1">
+            <i class="fa-solid fa-vial text-teal-200"></i>
+            <span class="hidden sm:inline">時間模擬</span>
+          </button>
+        </div>
+
       </div>
     </div>
   </header>
 
-  <main class="max-w-4xl w-full mx-auto px-4 py-6 flex-grow space-y-6">
-    
-    <!-- Tab 切換按鈕 (預設第一個) -->
-    <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex gap-1">
-      <button id="tabBtnForm" onclick="switchTab('form')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-teal-600 text-white shadow">
+  <!-- Main Content Wrapper -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 py-5 space-y-5">
+
+    <!-- Tab Navigation Header -->
+    <div class="bg-white rounded-2xl p-1.5 shadow-sm border border-slate-200 flex text-sm font-semibold">
+      <button id="tabBtnForm" onclick="switchTab('form')" 
+        class="flex-1 py-3 px-4 rounded-xl text-center transition flex items-center justify-center gap-2 bg-teal-600 text-white shadow-sm">
         <i class="fa-solid fa-pen-to-square"></i>
         <span>填寫報名表單</span>
       </button>
-      <button id="tabBtnRoster" onclick="switchTab('roster')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
-        <i class="fa-solid fa-list-check"></i>
+      <button id="tabBtnRoster" onclick="switchTab('roster')" 
+        class="flex-1 py-3 px-4 rounded-xl text-center transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+        <i class="fa-solid fa-clipboard-list"></i>
         <span>即時報名狀態</span>
+        <span id="totalSignupsBadge" class="ml-1 px-2 py-0.5 text-xs rounded-full bg-slate-200 text-slate-700">0</span>
       </button>
     </div>
 
-    <!-- 頁面 1: 表單填寫報名 (預設顯示) -->
+    <!-- 頁面 1: 表單填寫報名 (預設可見) -->
     <section id="viewForm" class="space-y-4">
-      <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
+      <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 space-y-6">
         
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-5">
+        <div class="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-clipboard-user text-teal-600"></i>
-              登記參與會眾展示架
+              <i class="fa-solid fa-user-plus text-teal-600"></i>
+              登記參加班表
             </h2>
-            <p class="text-xs text-slate-500 mt-1">請填寫您的姓名並勾選可參與的班次（可複選多個時段）</p>
+            <p class="text-xs text-slate-500 mt-0.5">請先填寫您的名字，並勾選預備參與的展示架時段</p>
           </div>
-
-          <button onclick="requestAdminAuth(() => openShiftModal())" class="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0 shadow-sm">
-            <i class="fa-solid fa-circle-plus text-teal-600"></i>
-            新增/管理時段
+          
+          <button onclick="requestAdminAuth(() => openShiftModal())" 
+            class="self-start sm:self-auto text-xs px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 font-medium transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus text-teal-600"></i>
+            <span>新增/管理時段</span>
           </button>
         </div>
 
-        <form onsubmit="handleFormSubmit(event)" class="space-y-5">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+        <form id="signupForm" onsubmit="handleSignupSubmit(event)" class="space-y-6">
+          
+          <!-- Participant Name Input -->
+          <div class="space-y-1.5">
+            <label for="userNameInput" class="block text-sm font-bold text-slate-700">
               您的姓名 <span class="text-rose-500">*</span>
             </label>
             <div class="relative">
-              <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-              <input type="text" id="userNameInput" required placeholder="請輸入全名 (例如: 廖家誼)" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <input type="text" id="userNameInput" required placeholder="例如：張弟兄 / 林姊妹" 
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition text-sm text-slate-800 placeholder-slate-400">
             </div>
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-2">
-              選擇欲報名的班次與時段 <span class="text-rose-500">*</span>
+          <!-- Participant Optional Note -->
+          <div class="space-y-1.5">
+            <label for="userNoteInput" class="block text-sm font-bold text-slate-700">
+              備註說明 <span class="text-xs font-normal text-slate-400">(選填，例如：帶展示架、配搭車輛)</span>
             </label>
-            <div id="formShiftOptions" class="space-y-2.5">
-              <!-- JS 動態產生時段選單卡片 -->
+            <input type="text" id="userNoteInput" placeholder="寫些補充訊息..." 
+              class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition text-sm text-slate-800 placeholder-slate-400">
+          </div>
+
+          <!-- Shift Checkbox List Container -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-sm font-bold text-slate-700">
+                選擇參與時段 <span class="text-rose-500">*</span> <span class="text-xs font-normal text-slate-500">(可複選)</span>
+              </label>
+              <span class="text-xs text-slate-400">點擊卡片即可勾選</span>
+            </div>
+
+            <div id="formShiftOptions" class="space-y-3">
+              <!-- Dynamically populated via JavaScript -->
             </div>
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">備註說明 (選填)</label>
-            <input type="text" id="notesInput" placeholder="例如: 需提早10分鐘離開..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
-          </div>
-
-          <button type="submit" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+          <!-- Submit Button -->
+          <button type="submit" 
+            class="w-full py-3.5 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md hover:shadow-lg transition active:scale-[0.99] flex items-center justify-center gap-2 text-base">
             <i class="fa-solid fa-paper-plane"></i>
-            送出報名登記
+            <span>確認送出報名</span>
           </button>
         </form>
 
       </div>
     </section>
 
-    <!-- 頁面 2: 即時報名名冊 -->
+    <!-- 頁面 2: 即時報名名冊 (預設隱藏) -->
     <section id="viewRoster" class="hidden space-y-4">
       <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 space-y-4">
         
-        <!-- 頂部功能按鈕與搜尋 -->
+        <!-- Header Controls & Search Bar -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
               <i class="fa-solid fa-users text-teal-600"></i>
               班表報名名冊
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">點擊「編輯/刪除」可管理班次，點擊「✕」可移除成員名單</p>
+            <p class="text-xs text-slate-500 mt-0.5">即時顯示所有人報名狀態；管理者可編輯/刪除時段與成員</p>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <button onclick="requestAdminAuth(() => openShiftModal())" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm">
+            <button onclick="openLineCopyModal()" 
+              class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+              <i class="fa-brands fa-line text-sm"></i>
+              <span>複製 LINE 班表文字</span>
+            </button>
+            <button onclick="requestAdminAuth(() => openShiftModal())" 
+              class="px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 text-xs font-semibold transition flex items-center gap-1">
               <i class="fa-solid fa-plus"></i>
-              新增時段
-            </button>
-            <button onclick="copyRosterSummary()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
-              <i class="fa-regular fa-copy"></i>
-              複製文字總覽
-            </button>
-            <button onclick="requestAdminAuth(() => resetDataToSeed())" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
-              <i class="fa-solid fa-arrow-rotate-left"></i>
-              重置範例資料
+              <span>新增時段</span>
             </button>
           </div>
         </div>
 
-        <!-- 搜尋列 -->
+        <!-- Filter & Search Input -->
         <div class="relative">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-          <input type="text" id="searchRosterInput" oninput="renderRosterView()" placeholder="搜尋姓名、地點或星期 (如: 鎮立圖書館, 莊淑凰)..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          </div>
+          <input type="text" id="rosterSearchInput" oninput="renderRosterView()" placeholder="搜尋姓名或地點..." 
+            class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition">
         </div>
 
-        <!-- 名冊動態內容列表 -->
-        <div id="rosterContainer" class="space-y-4 pt-2">
-          <!-- JS 動態產生名冊內容 -->
+        <!-- Shift Roster Cards List -->
+        <div id="rosterCardsList" class="space-y-4">
+          <!-- Dynamically populated via JavaScript -->
+        </div>
+
+        <!-- Reset Sample Data Button (Footer) -->
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <span>如需重置測試資料請點擊右側按鈕：</span>
+          <button onclick="requestAdminAuth(confirmResetData)" 
+            class="text-rose-500 hover:text-rose-700 font-medium underline flex items-center gap-1">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>重置範例資料</span>
+          </button>
         </div>
 
       </div>
@@ -173,362 +253,693 @@
 
   </main>
 
-  <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 mt-8 bg-white">
-    <p>埔里會眾展示架排班管理系統 &copy; <span id="currentYear"></span></p>
-  </footer>
-
-  <!-- Toast 訊息通知 -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white">
-    <i id="toastIcon" class="fa-solid fa-circle-check text-base"></i>
-    <span id="toastMsg">通知內容</span>
-  </div>
-
-  <!-- 確認刪除/移除彈窗 Modal -->
-  <div id="deleteModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex items-center gap-3 text-rose-600">
-        <div class="w-10 h-10 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-triangle-exclamation text-lg"></i>
-        </div>
-        <h3 class="text-base font-bold text-slate-900">確認操作？</h3>
-      </div>
-      <p id="deleteModalText" class="text-xs text-slate-600 leading-relaxed">您確定要執行此操作嗎？</p>
-      <div class="flex gap-2 justify-end pt-2">
-        <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
-          取消
-        </button>
-        <button type="button" id="confirmDeleteBtn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition shadow">
-          確認執行
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 時段新增/編輯彈窗 Modal (已完全修正) -->
-  <div id="shiftEditModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+  <!-- MODALS CONTAINER -->
+  <!-- 1. 管理者權限密碼驗證彈窗 -->
+  <div id="adminAuthModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 space-y-4 transform transition-all">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <div class="flex items-center gap-3 text-teal-600">
-          <div class="w-10 h-10 rounded-2xl bg-teal-100 flex items-center justify-center shrink-0">
-            <i class="fa-solid fa-calendar-pen text-lg"></i>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-shield-halved"></i>
           </div>
-          <div>
-            <h3 id="shiftModalTitle" class="text-base font-bold text-slate-900">新增排班時段</h3>
-            <p class="text-2xs text-slate-500">設定輪值時間、地點與說明內容</p>
-          </div>
+          <h3 class="font-bold text-slate-900">管理者驗證</h3>
         </div>
-        <button type="button" onclick="closeShiftModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg text-sm">
-          <i class="fa-solid fa-xmark"></i>
+        <button onclick="closeAdminAuthModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <form onsubmit="saveShiftSlot(event)" class="space-y-3.5">
-        <input type="hidden" id="editShiftId">
-        
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">星期 / 輪值日 <span class="text-rose-500">*</span></label>
-          <select id="modalDayIndex" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
-            <option value="0">星期日</option>
-            <option value="1">星期一</option>
-            <option value="2" selected>星期二</option>
-            <option value="3">星期三</option>
-            <option value="4">星期四</option>
-            <option value="5">星期五</option>
-            <option value="6">星期六</option>
-          </select>
-        </div>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        此操作屬於管理者功能 (修改/刪除時段或移除人員)，請輸入管理者權限密碼解鎖：
+      </p>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">時間範圍 <span class="text-rose-500">*</span></label>
-          <input type="text" id="modalTime" required placeholder="例如: 14:30 - 16:00" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">地點名稱 <span class="text-rose-500">*</span></label>
-          <input type="text" id="modalLocation" required placeholder="例如: 鎮立圖書館" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
-        </div>
-
-        <div class="flex gap-2 justify-end pt-3 border-t border-slate-100">
-          <button type="button" onclick="closeShiftModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
-            取消
-          </button>
-          <button type="submit" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl transition shadow">
-            儲存時段設定
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 權限密碼驗證 Modal -->
-  <div id="adminAuthModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
-      <div class="flex items-center gap-3 text-amber-600">
-        <div class="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-lock text-lg"></i>
-        </div>
-        <div>
-          <h3 class="text-base font-bold text-slate-900">管理者密碼驗證</h3>
-          <p class="text-2xs text-slate-500">輸入密碼以解鎖管理權限</p>
-        </div>
-      </div>
-
-      <form onsubmit="verifyAdminPassword(event)" class="space-y-3">
-        <div>
+      <form onsubmit="handleAdminAuthSubmit(event)" class="space-y-4">
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-700">管理者密碼</label>
           <div class="relative">
-            <input type="password" id="adminPasswordInput" required placeholder="管理者密碼" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
-            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
-              <i id="pwdEyeIcon" class="fa-solid fa-eye"></i>
+            <input type="password" id="adminPasswordInput" required placeholder="請輸入密碼..." 
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+              <i id="passwordEyeIcon" class="fa-solid fa-eye"></i>
             </button>
           </div>
-          <p id="pwdErrorMsg" class="text-2xs text-rose-500 font-bold mt-1 hidden">密碼錯誤，請重新輸入！</p>
+          <p class="text-2xs text-slate-400 text-right mt-1">管理者密碼：<code class="bg-slate-100 px-1 py-0.5 rounded text-amber-600 font-bold"></code></p>
         </div>
 
-        <div class="flex gap-2 justify-end pt-2">
-          <button type="button" onclick="closeAdminAuthModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+        <div class="flex gap-2">
+          <button type="button" onclick="closeAdminAuthModal()" class="flex-1 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50">
             取消
           </button>
-          <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition shadow">
-            確認驗證
+          <button type="submit" class="flex-1 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow transition">
+            驗證並解鎖
           </button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- 2. 新增 / 編輯時段彈窗 -->
+  <div id="shiftModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="shiftModalTitle" class="font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-teal-600"></i>
+          <span>編輯時段</span>
+        </h3>
+        <button onclick="closeShiftModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="shiftForm" onsubmit="handleShiftFormSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="editingShiftId" value="">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">輪值星期</label>
+            <select id="shiftDayOffset" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-teal-500 outline-none">
+              <option value="2">星期二</option>
+              <option value="5">星期五</option>
+              <option value="6">星期六</option>
+              <option value="0">星期日</option>
+              <option value="1">星期一</option>
+              <option value="3">星期三</option>
+              <option value="4">星期四</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">時間範圍</label>
+            <input type="text" id="shiftTimeText" required placeholder="例如: 14:30 - 16:00" 
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-teal-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">地點名稱</label>
+          <input type="text" id="shiftPlaceText" required placeholder="例如: 鎮立圖書館 / 夜市" 
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-teal-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">備註/說明 <span class="font-normal text-slate-400">(選填)</span></label>
+          <input type="text" id="shiftNoteText" placeholder="例如: 門口大樹旁展示架" 
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-teal-500 outline-none">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeShiftModal()" class="px-4 py-2 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50">
+            取消
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow">
+            儲存變更
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. LINE 班表文字複製彈窗 -->
+  <div id="lineCopyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-brands fa-line text-emerald-600 text-xl"></i>
+          <span>複製 LINE 文字班表</span>
+        </h3>
+        <button onclick="closeLineCopyModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <textarea id="lineCopyTextarea" readonly class="w-full h-56 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 outline-none resize-none focus:ring-2 focus:ring-teal-500"></textarea>
+
+      <div class="flex justify-between items-center pt-2">
+        <span class="text-2xs text-slate-400">貼心提示: 可直接點擊右側按鈕複製並貼至 LINE 群組</span>
+        <div class="flex gap-2">
+          <button onclick="closeLineCopyModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+            關閉
+          </button>
+          <button onclick="executeCopyLineText()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow flex items-center gap-1.5">
+            <i class="fa-regular fa-copy"></i>
+            <span>複製剪貼簿</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 時間模擬測試彈窗 -->
+  <div id="timeSimModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-vial text-purple-600"></i>
+          <span>測試週六 16:00 自動換週</span>
+        </h3>
+        <button onclick="closeTimeSimModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 leading-relaxed">
+        系統會在每週六 16:00 自動切換至下週的班表日期。您可手動切換時間情境進行預覽：
+      </p>
+
+      <div class="space-y-2 text-xs">
+        <button onclick="setSimulatedTime(false)" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-left font-medium flex items-center justify-between">
+          <span>1. 使用真實當前時間</span>
+          <i class="fa-solid fa-check text-teal-600" id="simModeRealIcon"></i>
+        </button>
+        <button onclick="setSimulatedTime(true)" class="w-full py-2.5 px-3 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-50 text-left font-medium text-purple-900 flex items-center justify-between">
+          <span>2. 模擬超過週六 16:00 (預覽下週)</span>
+          <i class="fa-solid fa-check text-purple-600 hidden" id="simModeNextIcon"></i>
+        </button>
+      </div>
+
+      <button onclick="closeTimeSimModal()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition">
+        完成
+      </button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT SYSTEM ENGINE -->
   <script>
-    const DEFAULT_SHIFT_TEMPLATES = [
-      { id: "shift_tue_lib", dayIndex: 2, time: "14:30 - 16:00", location: "鎮立圖書館", note: "" },
-      { id: "shift_fri_night", dayIndex: 5, time: "19:00 - 21:00", location: "夜市", note: "" },
-      { id: "shift_sat_morn", dayIndex: 6, time: "07:30 - 08:30", location: "廖姊妹家", note: "" },
-      { id: "shift_sat_afternoon", dayIndex: 6, time: "15:00 - 17:00", location: "日月潭文武廟觀景台", note: "" }
+    // System Constants & Password
+    const ADMIN_PASSWORD = "1914";
+    const STORAGE_KEY_SHIFTS = "puli_shifts_v1";
+    const STORAGE_KEY_ROSTER = "puli_roster_v1";
+
+    // Application State
+    let isAdminUnlocked = false;
+    let pendingAdminCallback = null;
+    let isSimulatingNextWeek = false;
+
+    // Default Templates matching user's reference image
+    const DEFAULT_SHIFTS = [
+      { id: "shift_1", dayOffset: 2, time: "14:30 - 16:00", place: "鎮立圖書館", note: "" },
+      { id: "shift_2", dayOffset: 5, time: "19:00 - 21:00", place: "夜市", note: "" },
+      { id: "shift_3", dayOffset: 6, time: "07:30 - 08:30", place: "廖姊妹家", note: "" },
+      { id: "shift_4", dayOffset: 6, time: "15:00 - 17:00", place: "日月潭文武廟觀景台", note: "" }
     ];
 
-    const SEED_PARTICIPANTS = {
-      "shift_tue_lib": [],
-      "shift_fri_night": [],
-      "shift_sat_morn": ["廖家誼"],
-      "shift_sat_afternoon": []
+    // Seed Data matching user's image names
+    const DEFAULT_ROSTER = {
+      "shift_1": [
+      ],
+      "shift_2": [
+      ],
+      "shift_3": [
+        { name: "廖家誼", note: "" }
+      ],
+      "shift_4": [
+      ]
     };
 
-    const ADMIN_PASSWORD = "1914";
+    let shiftsData = [];
+    let rosterData = {};
 
-    let shiftTemplates = [];
-    let registrations = {};
-    let isSimulatedNextWeek = false;
-    let isAdminAuthenticated = false; // 管理者解鎖狀態
-    let pendingDeleteTarget = null;
-    let pendingAdminAction = null;
+    function loadData() {
+      try {
+        const localShifts = localStorage.getItem(STORAGE_KEY_SHIFTS);
+        const localRoster = localStorage.getItem(STORAGE_KEY_ROSTER);
 
-    window.onload = function() {
-      document.getElementById('currentYear').innerText = new Date().getFullYear();
-      loadTemplates();
-      loadStorageData();
-      renderAllViews();
-      updateAdminStatusUI();
-    };
-
-    function loadTemplates() {
-      const stored = localStorage.getItem('puli_cart_templates_v5');
-      if (stored) {
-        try {
-          shiftTemplates = JSON.parse(stored);
-        } catch(e) {
-          shiftTemplates = JSON.parse(JSON.stringify(DEFAULT_SHIFT_TEMPLATES));
-        }
-      } else {
-        shiftTemplates = JSON.parse(JSON.stringify(DEFAULT_SHIFT_TEMPLATES));
+        shiftsData = localShifts ? JSON.parse(localShifts) : [...DEFAULT_SHIFTS];
+        rosterData = localRoster ? JSON.parse(localRoster) : JSON.parse(JSON.stringify(DEFAULT_ROSTER));
+      } catch (e) {
+        console.error("Storage loading error:", e);
+        shiftsData = [...DEFAULT_SHIFTS];
+        rosterData = JSON.parse(JSON.stringify(DEFAULT_ROSTER));
       }
     }
 
-    function saveTemplates() {
-      localStorage.setItem('puli_cart_templates_v5', JSON.stringify(shiftTemplates));
-    }
-
-    function loadStorageData() {
-      const stored = localStorage.getItem('puli_cart_shifts_v5');
-      if (stored) {
-        try {
-          registrations = JSON.parse(stored);
-        } catch (e) {
-          initSeedData();
-        }
-      } else {
-        initSeedData();
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY_SHIFTS, JSON.stringify(shiftsData));
+        localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(rosterData));
+      } catch (e) {
+        console.error("Storage saving error:", e);
       }
     }
 
-    function saveStorageData() {
-      localStorage.setItem('puli_cart_shifts_v5', JSON.stringify(registrations));
+    function confirmResetData() {
+      if (confirm("確定要重置為初始範例班表資料嗎？（所有手動修改與新報名將還原）")) {
+        shiftsData = [...DEFAULT_SHIFTS];
+        rosterData = JSON.parse(JSON.stringify(DEFAULT_ROSTER));
+        saveData();
+        renderAllViews();
+        showToast("已成功重置為範例資料", "success");
+      }
     }
 
-    function initSeedData() {
-      shiftTemplates = JSON.parse(JSON.stringify(DEFAULT_SHIFT_TEMPLATES));
-      saveTemplates();
-
-      registrations = {};
-      shiftTemplates.forEach(shift => {
-        const seedNames = SEED_PARTICIPANTS[shift.id] || [];
-        registrations[shift.id] = seedNames.map(name => ({
-          name: name,
-          timestamp: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }),
-          note: ''
-        }));
-      });
-      saveStorageData();
-    }
-
-    function getCalculatedShiftDates() {
-      const now = new Date();
-      if (isSimulatedNextWeek) {
+    function getTargetWeekDateInfo(dayOffset) {
+      let now = new Date();
+      if (isSimulatingNextWeek) {
+        // Fast forward 7 days for simulation
         now.setDate(now.getDate() + 7);
       }
 
-      const currentDay = now.getDay();
+      const currentDay = now.getDay(); // 0(Sun) - 6(Sat)
       const currentHour = now.getHours();
 
-      let isPastSatCutoff = (currentDay === 6 && currentHour >= 16);
+      let baseSunday = new Date(now);
+      baseSunday.setHours(0, 0, 0, 0);
 
-      let sunday = new Date(now);
-      sunday.setHours(0, 0, 0, 0);
-
-      if (isPastSatCutoff) {
-        sunday.setDate(now.getDate() + (7 - currentDay));
+      // Rollover rule: If Saturday >= 16:00, target next week
+      if (currentDay === 6 && currentHour >= 16) {
+        baseSunday.setDate(now.getDate() + (7 - currentDay));
       } else {
-        sunday.setDate(now.getDate() - currentDay);
+        baseSunday.setDate(now.getDate() - currentDay);
       }
 
+      const targetDate = new Date(baseSunday);
+      targetDate.setDate(baseSunday.getDate() + parseInt(dayOffset));
+
       const dayNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-      
-      return shiftTemplates.map(shift => {
-        const shiftDate = new Date(sunday);
-        shiftDate.setDate(sunday.getDate() + shift.dayIndex);
-        
-        const month = shiftDate.getMonth() + 1;
-        const date = shiftDate.getDate();
-        const dateFormatted = `${month}月${date}日 ${dayNames[shift.dayIndex]}`;
-        
-        return {
-          ...shift,
-          fullDateText: dateFormatted,
-          rawDate: shiftDate
-        };
-      });
+      const monthStr = targetDate.getMonth() + 1;
+      const dateStr = targetDate.getDate();
+      const dayName = dayNames[targetDate.getDay()];
+
+      return {
+        fullText: `${monthStr}月${dateStr}日 ${dayName}`,
+        shortText: `${monthStr}/${dateStr} (${dayName.replace("星期", "")})`
+      };
     }
 
-    function toggleSimulatedWeek() {
-      isSimulatedNextWeek = !isSimulatedNextWeek;
-      const label = document.getElementById('simToggleLabel');
-      label.innerText = isSimulatedNextWeek ? '模擬下一週' : '當週班表';
-      showToast('info', isSimulatedNextWeek ? '已切換為模擬下一週班表' : '已切換回當前實時班表');
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      
+      const bgColors = {
+        success: "bg-emerald-600 text-white",
+        error: "bg-rose-600 text-white",
+        warning: "bg-amber-500 text-white",
+        info: "bg-slate-800 text-white"
+      };
+
+      const icons = {
+        success: "fa-circle-check",
+        error: "fa-circle-xmark",
+        warning: "fa-triangle-exclamation",
+        info: "fa-circle-info"
+      };
+
+      toast.className = `p-3 rounded-xl shadow-lg border border-white/20 text-xs font-semibold flex items-center justify-between gap-3 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 ${bgColors[type] || bgColors.info}`;
+      toast.innerHTML = `
+        <div class="flex items-center gap-2">
+          <i class="fa-solid ${icons[type] || icons.info} text-sm"></i>
+          <span>${escapeHtml(message)}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="opacity-70 hover:opacity-100 p-0.5">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      `;
+
+      container.appendChild(toast);
+      
+      // Animate In
+      requestAnimationFrame(() => {
+        toast.classList.remove("translate-y-2", "opacity-0");
+      });
+
+      // Auto dismiss after 3 seconds
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-2");
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function switchTab(tabName) {
+      const viewForm = document.getElementById("viewForm");
+      const viewRoster = document.getElementById("viewRoster");
+      const tabBtnForm = document.getElementById("tabBtnForm");
+      const tabBtnRoster = document.getElementById("tabBtnRoster");
+
+      if (tabName === 'form') {
+        viewForm.classList.remove("hidden");
+        viewRoster.classList.add("hidden");
+        
+        tabBtnForm.className = "flex-1 py-3 px-4 rounded-xl text-center transition flex items-center justify-center gap-2 bg-teal-600 text-white shadow-sm";
+        tabBtnRoster.className = "flex-1 py-3 px-4 rounded-xl text-center transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50";
+      } else {
+        viewForm.classList.add("hidden");
+        viewRoster.classList.remove("hidden");
+        
+        tabBtnRoster.className = "flex-1 py-3 px-4 rounded-xl text-center transition flex items-center justify-center gap-2 bg-teal-600 text-white shadow-sm";
+        tabBtnForm.className = "flex-1 py-3 px-4 rounded-xl text-center transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50";
+      }
+    }
+
+    function requestAdminAuth(callback) {
+      if (isAdminUnlocked) {
+        if (callback) callback();
+        return;
+      }
+      pendingAdminCallback = callback;
+      document.getElementById("adminPasswordInput").value = "";
+      document.getElementById("adminAuthModal").classList.remove("hidden");
+      setTimeout(() => document.getElementById("adminPasswordInput").focus(), 100);
+    }
+
+    function closeAdminAuthModal() {
+      document.getElementById("adminAuthModal").classList.add("hidden");
+      pendingAdminCallback = null;
+    }
+
+    function handleAdminAuthSubmit(e) {
+      e.preventDefault();
+      const pwd = document.getElementById("adminPasswordInput").value;
+      if (pwd === ADMIN_PASSWORD) {
+        isAdminUnlocked = true;
+        updateAdminLockUI();
+        closeAdminAuthModal();
+        showToast("管理者身分驗證成功！已解鎖權限", "success");
+        if (pendingAdminCallback) {
+          const cb = pendingAdminCallback;
+          pendingAdminCallback = null;
+          cb();
+        }
+      } else {
+        showToast("密碼錯誤！請重新輸入", "error");
+        document.getElementById("adminPasswordInput").select();
+      }
+    }
+
+    function toggleAdminLock() {
+      if (isAdminUnlocked) {
+        isAdminUnlocked = false;
+        updateAdminLockUI();
+        showToast("已鎖定管理者權限", "info");
+      } else {
+        requestAdminAuth();
+      }
+    }
+
+    function updateAdminLockUI() {
+      const lockIcon = document.getElementById("adminLockIcon");
+      const lockText = document.getElementById("adminStatusText");
+      const btn = document.getElementById("adminStatusBtn");
+
+      if (isAdminUnlocked) {
+        lockIcon.className = "fa-solid fa-lock-open text-emerald-300";
+        lockText.innerText = "管理者權限: 已解鎖";
+        btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm bg-emerald-800 text-emerald-100 border border-emerald-500/40";
+      } else {
+        lockIcon.className = "fa-solid fa-lock text-amber-300";
+        lockText.innerText = "管理者權限: 已鎖定";
+        btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm bg-teal-800/60 hover:bg-teal-800 text-teal-100 border border-teal-500/30";
+      }
       renderAllViews();
     }
 
-    function renderAllViews() {
-      const activeShifts = getCalculatedShiftDates();
-      renderFormOptions(activeShifts);
-      renderRosterView(activeShifts);
+    function togglePasswordVisibility() {
+      const input = document.getElementById("adminPasswordInput");
+      const icon = document.getElementById("passwordEyeIcon");
+      if (input.type === "password") {
+        input.type = "text";
+        icon.className = "fa-solid fa-eye-slash";
+      } else {
+        input.type = "password";
+        icon.className = "fa-solid fa-eye";
+      }
     }
 
-    function renderFormOptions(currentShifts = getCalculatedShiftDates()) {
-      const container = document.getElementById('formShiftOptions');
-      container.innerHTML = '';
+    function openShiftModal(shiftId = null) {
+      const modal = document.getElementById("shiftModal");
+      const title = document.getElementById("shiftModalTitle");
+      const hiddenId = document.getElementById("editingShiftId");
+      
+      if (shiftId) {
+        const shift = shiftsData.find(s => s.id === shiftId);
+        if (!shift) return;
+        title.innerHTML = `<i class="fa-solid fa-pen-to-square text-teal-600"></i><span>編輯時段</span>`;
+        hiddenId.value = shift.id;
+        document.getElementById("shiftDayOffset").value = shift.dayOffset;
+        document.getElementById("shiftTimeText").value = shift.time;
+        document.getElementById("shiftPlaceText").value = shift.place;
+        document.getElementById("shiftNoteText").value = shift.note || "";
+      } else {
+        title.innerHTML = `<i class="fa-solid fa-plus text-teal-600"></i><span>新增時段</span>`;
+        hiddenId.value = "";
+        document.getElementById("shiftForm").reset();
+      }
 
-      if (currentShifts.length === 0) {
-        container.innerHTML = `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-400">目前無可報名的時段，請點擊上方按鈕新增時段</div>`;
+      modal.classList.remove("hidden");
+    }
+
+    function closeShiftModal() {
+      document.getElementById("shiftModal").classList.add("hidden");
+    }
+
+    function handleShiftFormSubmit(e) {
+      e.preventDefault();
+      const shiftId = document.getElementById("editingShiftId").value;
+      const dayOffset = parseInt(document.getElementById("shiftDayOffset").value);
+      const time = document.getElementById("shiftTimeText").value.trim();
+      const place = document.getElementById("shiftPlaceText").value.trim();
+      const note = document.getElementById("shiftNoteText").value.trim();
+
+      if (shiftId) {
+        // Edit existing
+        const shift = shiftsData.find(s => s.id === shiftId);
+        if (shift) {
+          shift.dayOffset = dayOffset;
+          shift.time = time;
+          shift.place = place;
+          shift.note = note;
+        }
+        showToast("已更薪時段資訊", "success");
+      } else {
+        // Add new
+        const newId = "shift_" + Date.now();
+        shiftsData.push({ id: newId, dayOffset, time, place, note });
+        rosterData[newId] = [];
+        showToast("已成功新增時段", "success");
+      }
+
+      saveData();
+      renderAllViews();
+      closeShiftModal();
+    }
+
+    function openDeleteModal(shiftId, memberIndex = null, memberName = "") {
+      if (memberIndex !== null) {
+        // Remove individual member
+        if (confirm(`確定要將「${memberName}」從該班次移除嗎？`)) {
+          if (rosterData[shiftId]) {
+            rosterData[shiftId].splice(memberIndex, 1);
+            saveData();
+            renderAllViews();
+            showToast(`已移除 ${memberName}`, "info");
+          }
+        }
+      } else {
+        // Delete shift entirely
+        const shift = shiftsData.find(s => s.id === shiftId);
+        if (!shift) return;
+        if (confirm(`確定要刪除時段「${shift.place} (${shift.time})」嗎？對應的報名紀錄也將被清除。`)) {
+          shiftsData = shiftsData.filter(s => s.id !== shiftId);
+          delete rosterData[shiftId];
+          saveData();
+          renderAllViews();
+          showToast("已成功刪除時段", "info");
+        }
+      }
+    }
+
+    function handleSignupSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById("userNameInput").value.trim();
+      const note = document.getElementById("userNoteInput").value.trim();
+      
+      const checkedBoxes = Array.from(document.querySelectorAll('input[name="selectedShifts"]:checked')).map(cb => cb.value);
+
+      if (!name) {
+        showToast("請填寫您的姓名", "warning");
         return;
       }
 
-      currentShifts.forEach(shift => {
-        const list = registrations[shift.id] || [];
+      if (checkedBoxes.length === 0) {
+        showToast("請至少勾選一個欲參與的時段", "warning");
+        return;
+      }
 
-        const card = document.createElement('div');
-        card.className = 'flex flex-col sm:flex-row sm:items-center justify-between p-3.5 border rounded-xl bg-white border-slate-200 hover:border-teal-500 hover:bg-teal-50/20 transition gap-2 group';
-
-        card.innerHTML = `
-          <label class="flex items-center gap-3 cursor-pointer select-none flex-grow min-w-0">
-            <input type="checkbox" name="shiftSelection" value="${shift.id}" class="w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 shrink-0">
-            <div class="min-w-0">
-              <div class="font-bold text-slate-800 text-xs sm:text-sm">
-                ${shift.fullDateText} <span class="text-teal-700 ml-1 font-mono">${shift.time}</span>
-              </div>
-              <div class="text-2xs text-slate-500 mt-0.5 flex items-center gap-2">
-                <span><i class="fa-solid fa-location-dot text-rose-500 mr-0.5"></i> 地點：${escapeHtml(shift.location)}</span>
-                ${shift.note ? `<span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${escapeHtml(shift.note)}</span>` : ''}
-              </div>
-            </div>
-          </label>
-
-          <div class="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
-            <span class="text-2xs font-bold px-2.5 py-1 rounded-full ${
-              list.length > 0 ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-slate-500'
-            }">
-              ${list.length > 0 ? `已報名 ${list.length} 人` : '尚無人報名'}
-            </span>
-
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="requestAdminAuth(() => openShiftModal('${shift.id}'))" class="p-1 px-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg text-2xs transition font-semibold" title="編輯時段">
-                <i class="fa-solid fa-pen-to-square"></i> 編輯
-              </button>
-              <button type="button" onclick="requestAdminAuth(() => confirmDeleteShift('${shift.id}'))" class="p-1 px-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg text-2xs transition font-semibold" title="刪除時段">
-                <i class="fa-solid fa-trash-can"></i> 刪除
-              </button>
-            </div>
-          </div>
-        `;
-
-        container.appendChild(card);
+      let addedCount = 0;
+      checkedBoxes.forEach(shiftId => {
+        if (!rosterData[shiftId]) {
+          rosterData[shiftId] = [];
+        }
+        // Avoid duplicate entry of same name in same shift
+        const exists = rosterData[shiftId].some(m => m.name === name);
+        if (!exists) {
+          rosterData[shiftId].push({ name, note });
+          addedCount++;
+        }
       });
+
+      saveData();
+      renderAllViews();
+
+      // Reset form
+      document.getElementById("userNameInput").value = "";
+      document.getElementById("userNoteInput").value = "";
+
+      showToast(`感謝 ${name}！已成功報名 ${addedCount} 個班次`, "success");
+
+      // Switch to Roster Status Tab automatically
+      switchTab("roster");
     }
 
-    function renderRosterView(currentShifts = getCalculatedShiftDates()) {
-      const container = document.getElementById('rosterContainer');
-      const searchQuery = (document.getElementById('searchRosterInput')?.value || '').trim().toLowerCase();
-      container.innerHTML = '';
+    function renderAllViews() {
+      // 1. Target Week Header Badge
+      const dateSample = getTargetWeekDateInfo(2);
+      document.getElementById("targetWeekBadge").querySelector("span").innerText = 
+        `當前排班週期：${dateSample.fullText.split(' ')[0]} 週 (週六 16:00 自動換週)`;
 
-      currentShifts.forEach(shift => {
-        const rawList = registrations[shift.id] || [];
-        
-        const matchesQuery = searchQuery === '' || 
-          shift.location.toLowerCase().includes(searchQuery) ||
-          shift.fullDateText.toLowerCase().includes(searchQuery) ||
-          rawList.some(p => p.name.toLowerCase().includes(searchQuery));
+      // 2. Calculate Total Registrations
+      let totalCount = 0;
+      Object.values(rosterData).forEach(list => totalCount += (list ? list.length : 0));
+      document.getElementById("totalSignupsBadge").innerText = totalCount;
 
-        if (!matchesQuery) return;
+      renderFormView();
+      renderRosterView();
+    }
 
-        const shiftBox = document.createElement('div');
-        shiftBox.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:border-slate-300 transition";
-
-        shiftBox.innerHTML = `
-          <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="font-extrabold text-slate-800 text-sm sm:text-base">${shift.fullDateText}</span>
-                <span class="bg-teal-600 text-white font-mono text-2xs px-2 py-0.5 rounded font-bold">${shift.time}</span>
-              </div>
-              <div class="text-xs text-slate-600 mt-0.5 flex items-center gap-2">
-                <span><i class="fa-solid fa-location-dot text-rose-500"></i> 地點：<strong class="text-slate-800">${escapeHtml(shift.location)}</strong></span>
-                ${shift.note ? `<span class="bg-slate-200/80 text-slate-700 px-1.5 py-0.5 rounded text-2xs font-semibold">${escapeHtml(shift.note)}</span>` : ''}
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex items-center gap-1">
-                <button onclick="requestAdminAuth(() => openShiftModal('${shift.id}'))" class="px-2 py-1 bg-slate-200/80 hover:bg-teal-100 hover:text-teal-700 text-slate-600 text-2xs font-bold rounded-lg transition" title="編輯時段">
-                  <i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">編輯</span>
-                </button>
-                <button onclick="requestAdminAuth(() => confirmDeleteShift('${shift.id}'))" class="px-2 py-1 bg-slate-200/80 hover:bg-rose-100 hover:text-rose-700 text-slate-600 text-2xs font-bold rounded-lg transition" title="刪除時段">
-                  <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">刪除</span>
-                </button>
-              </div>
-              <span class="text-2xs font-bold px-2.5 py-1 rounded-full ${
-                rawList.length > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
-              }">
-                已報名 ${rawList.length} 人
-              </span>
-            </div>
+    function renderFormView() {
+      const container = document.getElementById("formShiftOptions");
+      if (shiftsData.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs">
+            目前尚無設定任何班表時段，請點擊上方「新增/管理時段」進行建立
           </div>
+        `;
+        return;
+      }
 
-          <div class="p-4">
+      container.innerHTML = shiftsData.map(shift => {
+        const dateInfo = getTargetWeekDateInfo(shift.dayOffset);
+        const enrolledList = rosterData[shift.id] || [];
+        const enrolledCount = enrolledList.length;
+
+        return `
+          <div class="group relative bg-white border border-slate-200 rounded-xl p-3.5 hover:border-teal-400 transition shadow-2xs flex items-center justify-between gap-3">
+            
+            <!-- Checkbox Label Section -->
+            <label class="flex items-start gap-3 flex-1 cursor-pointer min-w-0">
+              <input type="checkbox" name="selectedShifts" value="${shift.id}" 
+                class="mt-1 w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer shrink-0">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-slate-900 text-sm">${dateInfo.fullText}</span>
+                  <span class="px-2 py-0.5 rounded text-2xs font-bold bg-teal-50 text-teal-700 border border-teal-200/60">${shift.time}</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-700 mt-1 flex items-center gap-1.5">
+                  <i class="fa-solid fa-location-dot text-rose-500"></i>
+                  <span>${escapeHtml(shift.place)}</span>
+                  ${shift.note ? `<span class="text-slate-400 font-normal">(${escapeHtml(shift.note)})</span>` : ''}
+                </div>
+              </div>
+            </label>
+
+            <!-- Status Badge & Admin Action Quick Buttons -->
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${enrolledCount > 0 ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-slate-500'}">
+                ${enrolledCount > 0 ? `已報名 ${enrolledCount} 人` : '目前尚無人報名'}
+              </span>
+
+              <!-- Admin Edit & Delete buttons -->
+              <div class="flex items-center gap-1 border-l border-slate-100 pl-2">
+                <button type="button" onclick="requestAdminAuth(() => openShiftModal('${shift.id}'))" 
+                  title="編輯時段 (管理者)"
+                  class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-slate-100 rounded-lg transition">
+                  <i class="fa-solid fa-pen-to-square text-xs"></i>
+                </button>
+                <button type="button" onclick="requestAdminAuth(() => openDeleteModal('${shift.id}'))" 
+                  title="刪除時段 (管理者)"
+                  class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRosterView() {
+      const container = document.getElementById("rosterCardsList");
+      const searchKeyword = (document.getElementById("rosterSearchInput")?.value || "").trim().toLowerCase();
+
+      if (shiftsData.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs">
+            目前尚無設定任何班次時段
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = shiftsData.map(shift => {
+        const dateInfo = getTargetWeekDateInfo(shift.dayOffset);
+        let rawList = rosterData[shift.id] || [];
+
+        // Apply Search Filter if keyword exists
+        if (searchKeyword) {
+          rawList = rawList.filter(p => 
+            p.name.toLowerCase().includes(searchKeyword) || 
+            shift.place.toLowerCase().includes(searchKeyword)
+          );
+        }
+
+        return `
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:shadow-sm transition space-y-3">
+            
+            <!-- Card Title & Info Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-slate-900 text-sm">${dateInfo.fullText}</span>
+                  <span class="px-2 py-0.5 rounded text-2xs font-bold bg-slate-100 text-slate-700">${shift.time}</span>
+                </div>
+                <div class="text-xs font-semibold text-teal-800 mt-1 flex items-center gap-1.5">
+                  <i class="fa-solid fa-location-dot text-rose-500"></i>
+                  <span>${escapeHtml(shift.place)}</span>
+                  ${shift.note ? `<span class="text-slate-400 font-normal">(${escapeHtml(shift.note)})</span>` : ''}
+                </div>
+              </div>
+
+              <!-- Registered count & Shift Control -->
+              <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                  已報名 ${rawList.length} 人
+                </span>
+                <div class="flex items-center gap-1">
+                  <button onclick="requestAdminAuth(() => openShiftModal('${shift.id}'))" 
+                    title="編輯時段 (需要管理者權限)" 
+                    class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-slate-100 rounded-lg transition text-xs">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <button onclick="requestAdminAuth(() => openDeleteModal('${shift.id}'))" 
+                    title="刪除時段 (需要管理者權限)" 
+                    class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition text-xs">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Members Badge List -->
+            <div>
             ${rawList.length === 0 ? `
               <div class="text-center py-3 text-slate-400 text-xs">
                 <i class="fa-regular fa-folder-open text-xl mb-1 block"></i>
@@ -547,8 +958,8 @@
                         ${person.note ? `<div class="text-2xs text-amber-600 truncate">${escapeHtml(person.note)}</div>` : ''}
                       </div>
                     </div>
-                    <button onclick="openDeleteModal('${shift.id}', ${idx}, '${escapeHtml(person.name)}')" 
-                      title="移除成員"
+                    <button onclick="requestAdminAuth(() => openDeleteModal('${shift.id}', ${idx}, '${escapeHtml(person.name)}'))" 
+                      title="移除成員 (需要管理者權限)"
                       class="text-slate-300 hover:text-rose-500 p-1 rounded hover:bg-rose-50 transition">
                       <i class="fa-solid fa-xmark text-xs"></i>
                     </button>
@@ -557,367 +968,78 @@
               </div>
             `}
           </div>
+
+        </div>
         `;
+      }).join('');
+    }
 
-        container.appendChild(shiftBox);
+    function generateLineText() {
+      const sampleDate = getTargetWeekDateInfo(2);
+      let text = `【埔里會眾展示架安排名單】\n`;
+      text += `📅 週期：${sampleDate.fullText.split(' ')[0]} 週\n`;
+      text += `────────────────────\n\n`;
+
+      shiftsData.forEach(shift => {
+        const dateInfo = getTargetWeekDateInfo(shift.dayOffset);
+        const list = rosterData[shift.id] || [];
+        const namesStr = list.map(p => p.name + (p.note ? `(${p.note})` : '')).join('、');
+
+        text += `📌 ${dateInfo.fullText} ${shift.time}\n`;
+        text += `📍 地點：${shift.place}${shift.note ? ' (' + shift.note + ')' : ''}\n`;
+        text += `👥 參與名單：${namesStr || '尚無人報名'}\n\n`;
       });
 
-      if (container.children.length === 0) {
-        container.innerHTML = `
-          <div class="bg-white rounded-2xl p-8 text-center text-slate-400">
-            <i class="fa-solid fa-magnifying-glass text-2xl mb-2"></i>
-            <div class="text-xs">找不到符合「${escapeHtml(searchQuery)}」的班次或成員</div>
-          </div>
-        `;
-      }
+      text += `（請大家準時前往，謝謝弟兄姊妹的熱心配搭！）`;
+      return text;
     }
 
-    function handleFormSubmit(e) {
-      e.preventDefault();
-      
-      const nameInput = document.getElementById('userNameInput');
-      const notesInput = document.getElementById('notesInput');
-      const name = nameInput.value.trim();
-      const note = notesInput.value.trim();
-
-      const selectedCheckboxes = Array.from(document.querySelectorAll('input[name="shiftSelection"]:checked'));
-
-      if (!name) {
-        showToast('error', '請輸入報名者姓名！');
-        return;
-      }
-
-      if (selectedCheckboxes.length === 0) {
-        showToast('warning', '請至少勾選一個要報名的班次！');
-        return;
-      }
-
-      let successCount = 0;
-      const nowTimeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-
-      selectedCheckboxes.forEach(cb => {
-        const shiftId = cb.value;
-        const currentList = registrations[shiftId] || [];
-        const template = shiftTemplates.find(s => s.id === shiftId);
-
-        if (!template) return;
-
-        if (currentList.some(p => p.name === name)) {
-          showToast('warning', `${name} 已在 ${template.location} 的名單中！`);
-          return;
-        }
-
-        currentList.push({
-          name: name,
-          timestamp: nowTimeStr,
-          note: note
-        });
-        registrations[shiftId] = currentList;
-        successCount++;
-      });
-
-      if (successCount > 0) {
-        saveStorageData();
-        renderAllViews();
-        
-        nameInput.value = '';
-        notesInput.value = '';
-        document.querySelectorAll('input[name="shiftSelection"]').forEach(cb => cb.checked = false);
-
-        showToast('success', `成功完成 ${successCount} 個班次的報名！`);
-        setTimeout(() => switchTab('roster'), 400);
-      }
+    function openLineCopyModal() {
+      const textarea = document.getElementById("lineCopyTextarea");
+      textarea.value = generateLineText();
+      document.getElementById("lineCopyModal").classList.remove("hidden");
     }
 
-    function openShiftModal(shiftId = null) {
-      const modal = document.getElementById('shiftEditModal');
-      const title = document.getElementById('shiftModalTitle');
-      const editIdInput = document.getElementById('editShiftId');
-      const daySelect = document.getElementById('modalDayIndex');
-      const timeInput = document.getElementById('modalTime');
-      const locationInput = document.getElementById('modalLocation');
-      const noteInput = document.getElementById('modalNote');
-
-      if (shiftId) {
-        const shift = shiftTemplates.find(s => s.id === shiftId);
-        if (!shift) return;
-        title.innerText = '編輯排班時段';
-        editIdInput.value = shift.id;
-        daySelect.value = shift.dayIndex;
-        timeInput.value = shift.time;
-        locationInput.value = shift.location;
-        noteInput.value = shift.note || '';
-      } else {
-        title.innerText = '新增排班時段';
-        editIdInput.value = '';
-        daySelect.value = 2;
-        timeInput.value = '';
-        locationInput.value = '';
-        noteInput.value = '';
-      }
-
-      modal.classList.remove('hidden');
+    function closeLineCopyModal() {
+      document.getElementById("lineCopyModal").classList.add("hidden");
     }
 
-    function closeShiftModal() {
-      document.getElementById('shiftEditModal').classList.add('hidden');
-    }
-
-    function saveShiftSlot(e) {
-      e.preventDefault();
-      const id = document.getElementById('editShiftId').value;
-      const dayIndex = parseInt(document.getElementById('modalDayIndex').value, 10);
-      const time = document.getElementById('modalTime').value.trim();
-      const location = document.getElementById('modalLocation').value.trim();
-      const note = document.getElementById('modalNote').value.trim();
-
-      if (!time || !location) {
-        showToast('warning', '請完整填寫時間與地點！');
-        return;
-      }
-
-      if (id) {
-        const shift = shiftTemplates.find(s => s.id === id);
-        if (shift) {
-          shift.dayIndex = dayIndex;
-          shift.time = time;
-          shift.location = location;
-          shift.note = note;
-        }
-      } else {
-        const newId = 'shift_' + Date.now();
-        shiftTemplates.push({
-          id: newId,
-          dayIndex: dayIndex,
-          time: time,
-          location: location,
-          note: note
-        });
-        registrations[newId] = [];
-      }
-
-      saveTemplates();
-      saveStorageData();
-      renderAllViews();
-      closeShiftModal();
-      showToast('success', id ? '已成功修改時段設定！' : '已成功新增排班時段！');
-    }
-
-    function confirmDeleteShift(shiftId) {
-      const shift = shiftTemplates.find(s => s.id === shiftId);
-      if (!shift) return;
-
-      const regCount = (registrations[shiftId] || []).length;
-      let confirmMsg = `您確定要刪除「${shift.location} (${shift.time})」此排班時段嗎？`;
-      if (regCount > 0) {
-        confirmMsg += `\n注意：該時段已有 ${regCount} 位會眾報名，刪除後將一併移除！`;
-      }
-
-      document.getElementById('deleteModalText').innerText = confirmMsg;
-      document.getElementById('confirmDeleteBtn').onclick = () => {
-        executeDeleteShift(shiftId);
-      };
-      document.getElementById('deleteModal').classList.remove('hidden');
-    }
-
-    function executeDeleteShift(shiftId) {
-      shiftTemplates = shiftTemplates.filter(s => s.id !== shiftId);
-      delete registrations[shiftId];
-      saveTemplates();
-      saveStorageData();
-      renderAllViews();
-      closeDeleteModal();
-      showToast('info', '已刪除該排班時段');
-    }
-
-    function openDeleteModal(shiftId, index, name) {
-      pendingDeleteTarget = { shiftId, index };
-      document.getElementById('deleteModalText').innerText = `確定要將「${name}」從該班次中移除嗎？`;
-      document.getElementById('confirmDeleteBtn').onclick = executeDelete;
-      document.getElementById('deleteModal').classList.remove('hidden');
-    }
-
-    function closeDeleteModal() {
-      document.getElementById('deleteModal').classList.add('hidden');
-      pendingDeleteTarget = null;
-    }
-
-    function executeDelete() {
-      if (!pendingDeleteTarget) return;
-      const { shiftId, index } = pendingDeleteTarget;
-      
-      if (registrations[shiftId] && registrations[shiftId][index]) {
-        const removed = registrations[shiftId].splice(index, 1);
-        saveStorageData();
-        renderAllViews();
-        showToast('info', `已移除 ${removed[0]?.name || ''}`);
-      }
-      closeDeleteModal();
-    }
-
-    function requestAdminAuth(actionCallback) {
-      if (isAdminAuthenticated) {
-        // 已解鎖管理員狀態，直接執行該操作 (如開啟新增/編輯時段彈窗)
-        actionCallback();
-        return;
-      }
-
-      pendingAdminAction = actionCallback;
-      const modal = document.getElementById('adminAuthModal');
-      const input = document.getElementById('adminPasswordInput');
-      const err = document.getElementById('pwdErrorMsg');
-      
-      input.value = '';
-      err.classList.add('hidden');
-      modal.classList.remove('hidden');
-      setTimeout(() => input.focus(), 100);
-    }
-
-    function closeAdminAuthModal() {
-      document.getElementById('adminAuthModal').classList.add('hidden');
-      pendingAdminAction = null;
-    }
-
-    function verifyAdminPassword(e) {
-      e.preventDefault();
-      const input = document.getElementById('adminPasswordInput');
-      const err = document.getElementById('pwdErrorMsg');
-
-      if (input.value === ADMIN_PASSWORD) {
-        isAdminAuthenticated = true;
-        updateAdminStatusUI();
-        closeAdminAuthModal();
-        showToast('success', '管理者權限已解鎖！');
-
-        if (typeof pendingAdminAction === 'function') {
-          const action = pendingAdminAction;
-          pendingAdminAction = null;
-          action();
-        }
-      } else {
-        err.classList.remove('hidden');
-        input.focus();
-      }
-    }
-
-    function toggleAdminSession() {
-      if (isAdminAuthenticated) {
-        isAdminAuthenticated = false;
-        updateAdminStatusUI();
-        showToast('info', '已鎖定管理者權限');
-      } else {
-        requestAdminAuth(() => {});
-      }
-    }
-
-    function updateAdminStatusUI() {
-      const btn = document.getElementById('adminStatusBtn');
-      const icon = document.getElementById('adminLockIcon');
-      const label = document.getElementById('adminStatusLabel');
-
-      if (isAdminAuthenticated) {
-        btn.className = "px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 font-bold rounded-xl text-xs transition flex items-center gap-1.5";
-        icon.className = "fa-solid fa-lock-open text-emerald-300";
-        label.innerText = "管理者: 已解鎖";
-      } else {
-        btn.className = "px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30 font-bold rounded-xl text-xs transition flex items-center gap-1.5";
-        icon.className = "fa-solid fa-lock text-amber-300";
-        label.innerText = "管理者權限: 未解鎖";
-      }
-    }
-
-    function togglePasswordVisibility() {
-      const input = document.getElementById('adminPasswordInput');
-      const icon = document.getElementById('pwdEyeIcon');
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.className = 'fa-solid fa-eye-slash';
-      } else {
-        input.type = 'password';
-        icon.className = 'fa-solid fa-eye';
-      }
-    }
-
-    function switchTab(tabName) {
-      const viewRoster = document.getElementById('viewRoster');
-      const viewForm = document.getElementById('viewForm');
-      const btnRoster = document.getElementById('tabBtnRoster');
-      const btnForm = document.getElementById('tabBtnForm');
-
-      if (tabName === 'roster') {
-        viewRoster.classList.remove('hidden');
-        viewForm.classList.add('hidden');
-        btnRoster.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-teal-600 text-white shadow';
-        btnForm.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100';
-      } else {
-        viewForm.classList.remove('hidden');
-        viewRoster.classList.add('hidden');
-        btnForm.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-teal-600 text-white shadow';
-        btnRoster.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100';
-      }
-    }
-
-    function resetDataToSeed() {
-      initSeedData();
-      renderAllViews();
-      showToast('success', '已成功重置為預設範例資料！');
-    }
-
-    function copyRosterSummary() {
-      const shifts = getCalculatedShiftDates();
-      let text = `【埔里會眾展示架安排名冊】\n\n`;
-
-      shifts.forEach(s => {
-        const list = registrations[s.id] || [];
-        const namesStr = list.length > 0 ? list.map(p => p.name).join('、') : '尚無人報名';
-        text += `📌 ${s.fullDateText} (${s.time})\n📍 地點: ${s.location}${s.note ? ` (${s.note})` : ''}\n👤 名單: ${namesStr} (${list.length}人)\n\n`;
-      });
-
-      copyToClipboard(text);
-      showToast('success', '已將班表名冊複製至剪貼簿！');
-    }
-
-    function copyToClipboard(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
+    function executeCopyLineText() {
+      const textarea = document.getElementById("lineCopyTextarea");
       textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-    }
-
-    function showToast(type, message) {
-      const toast = document.getElementById('toast');
-      const msg = document.getElementById('toastMsg');
-      const icon = document.getElementById('toastIcon');
-
-      msg.innerText = message;
-
-      if (type === 'success') {
-        toast.className = "fixed bottom-5 right-5 z-50 transform transition-all duration-300 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white bg-emerald-600";
-        icon.className = "fa-solid fa-circle-check text-base";
-      } else if (type === 'error') {
-        toast.className = "fixed bottom-5 right-5 z-50 transform transition-all duration-300 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white bg-rose-600";
-        icon.className = "fa-solid fa-circle-exclamation text-base";
-      } else if (type === 'warning') {
-        toast.className = "fixed bottom-5 right-5 z-50 transform transition-all duration-300 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white bg-amber-600";
-        icon.className = "fa-solid fa-triangle-exclamation text-base";
-      } else {
-        toast.className = "fixed bottom-5 right-5 z-50 transform transition-all duration-300 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white bg-slate-800";
-        icon.className = "fa-solid fa-circle-info text-base";
+      try {
+        document.execCommand('copy');
+        showToast("已成功複製 LINE 班表文字！", "success");
+        closeLineCopyModal();
+      } catch (err) {
+        showToast("複製失敗，請手動選取文字複製", "error");
       }
-
-      toast.classList.remove('translate-y-20', 'opacity-0');
-
-      setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 3000);
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    function toggleTimeSimModal() {
+      document.getElementById("timeSimModal").classList.toggle("hidden");
     }
+
+    function closeTimeSimModal() {
+      document.getElementById("timeSimModal").classList.add("hidden");
+    }
+
+    function setSimulatedTime(isNext) {
+      isSimulatingNextWeek = isNext;
+      document.getElementById("simModeRealIcon").classList.toggle("hidden", isNext);
+      document.getElementById("simModeNextIcon").classList.toggle("hidden", !isNext);
+      
+      renderAllViews();
+      showToast(isNext ? "已切換為：模擬週六 16:00 後 (預覽下週)" : "已還原為：真實時間", "info");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadData();
+      renderAllViews();
+      // Default initial view is set to Sign-up Form Tab ("form")
+      switchTab("form");
+    });
   </script>
+
 </body>
 </html>
