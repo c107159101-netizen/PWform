@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>埔里會眾展示架報名系統</title>
+  <title>埔里會眾展示架安排系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,19 +56,69 @@
 
   <main class="max-w-4xl w-full mx-auto px-4 py-6 flex-grow space-y-6">
     
-    <!-- Tab 切換欄 -->
     <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex gap-1">
-      <button id="tabBtnRoster" onclick="switchTab('roster')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
-        <i class="fa-solid fa-list-check"></i>
-        <span>即時報名狀態</span>
-      </button>
       <button id="tabBtnForm" onclick="switchTab('form')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 bg-teal-600 text-white shadow">
         <i class="fa-solid fa-pen-to-square"></i>
         <span>填寫報名表單</span>
       </button>
+      <button id="tabBtnRoster" onclick="switchTab('roster')" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+        <i class="fa-solid fa-list-check"></i>
+        <span>即時報名狀態</span>
+      </button>
     </div>
 
-    <!-- 頁面 1: 即時報名狀態 -->
+    <section id="viewForm" class="space-y-4">
+      <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 mb-5">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-user text-teal-600"></i>
+              登記參與會眾展示架
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">請填寫您的姓名並勾選可參與的班次（可複選多個時段）</p>
+          </div>
+
+          <button onclick="requestAdminAuth(() => openShiftModal())" class="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shrink-0">
+            <i class="fa-solid fa-plus text-teal-600"></i>
+            新增/管理時段
+          </button>
+        </div>
+
+        <form onsubmit="handleFormSubmit(event)" class="space-y-5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              您的姓名 <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="userNameInput" required placeholder="請輸入全名 (例如: 廖家誼)" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">
+              選擇欲報名的班次與時段 <span class="text-rose-500">*</span>
+            </label>
+            <div id="formShiftOptions" class="space-y-2.5">
+              <!-- JS 動態產生時段選單卡片 -->
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">備註說明 (選填)</label>
+            <input type="text" id="notesInput" placeholder="例如: 需提早10分鐘離開..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i>
+            送出報名登記
+          </button>
+        </form>
+
+      </div>
+    </section>
+
     <section id="viewRoster" class="hidden space-y-4">
       <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 space-y-4">
         
@@ -106,61 +156,14 @@
 
         <!-- 名冊動態內容列表 -->
         <div id="rosterContainer" class="space-y-4 pt-2">
-          <!-- JS 動態產生 -->
+          <!-- JS 動態產生名冊內容 -->
         </div>
-
-      </div>
-    </section>
-
-    <!-- 頁面 2: 填寫報名表單 (預設顯示) -->
-    <section id="viewForm" class="space-y-4">
-      <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
-        
-        <div class="border-b border-slate-100 pb-4 mb-5">
-          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-clipboard-user text-teal-600"></i>
-            登記參與會眾展示架
-          </h2>
-          <p class="text-xs text-slate-500 mt-1">請填寫您的姓名並勾選可參與的班次（可複選多個時段）</p>
-        </div>
-
-        <form onsubmit="handleFormSubmit(event)" class="space-y-5">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">
-              您的姓名 <span class="text-rose-500">*</span>
-            </label>
-            <div class="relative">
-              <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-              <input type="text" id="userNameInput" required placeholder="請輸入全名 (例如: 廖家誼)" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-2">
-              選擇欲報名的班次與時段 <span class="text-rose-500">*</span>
-            </label>
-            <div id="formShiftOptions" class="space-y-2.5">
-              <!-- JS 動態產生 -->
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">備註說明 (選填)</label>
-            <input type="text" id="notesInput" placeholder="例如: 需提早10分鐘離開..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 transition">
-          </div>
-
-          <button type="submit" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-            <i class="fa-solid fa-paper-plane"></i>
-            送出報名登記
-          </button>
-        </form>
 
       </div>
     </section>
 
   </main>
 
-  <!-- 頁尾 -->
   <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 mt-8 bg-white">
     <p>埔里會眾展示架排班管理系統 &copy; <span id="currentYear"></span></p>
   </footer>
@@ -231,11 +234,6 @@
           <input type="text" id="modalLocation" required placeholder="例如: 鎮立圖書館" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">人數上限 (名額)</label>
-          <input type="number" id="modalMaxCapacity" required min="1" max="20" value="4" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500">
-        </div>
-
         <div class="flex gap-2 justify-end pt-3">
           <button type="button" onclick="closeShiftModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
             取消
@@ -286,17 +284,17 @@
 
   <script>
     const DEFAULT_SHIFT_TEMPLATES = [
-      { id: "shift_tue_lib", dayIndex: 2, time: "14:30 - 16:00", location: "鎮立圖書館", maxCapacity: 4 },
-      { id: "shift_fri_night", dayIndex: 5, time: "19:00 - 21:00", location: "夜市", maxCapacity: 5 },
-      { id: "shift_sat_morn", dayIndex: 6, time: "07:30 - 08:30", location: "廖姊妹家", maxCapacity: 4 },
-      { id: "shift_sat_afternoon", dayIndex: 6, time: "15:00 - 17:00", location: "日月潭文武廟觀景台", maxCapacity: 4 }
+      { id: "shift_tue_lib", dayIndex: 2, time: "14:30 - 16:00", location: "鎮立圖書館" },
+      { id: "shift_fri_night", dayIndex: 5, time: "19:00 - 21:00", location: "夜市" },
+      { id: "shift_sat_morn", dayIndex: 6, time: "07:30 - 08:30", location: "廖姊妹家" },
+      { id: "shift_sat_afternoon", dayIndex: 6, time: "15:00 - 17:00", location: "日月潭文武廟觀景台" }
     ];
 
     const SEED_PARTICIPANTS = {
-      "shift_tue_lib": [],
-      "shift_fri_night": [],
-      "shift_sat_morn": ["廖家誼"],
-      "shift_sat_afternoon": []
+      "shift_tue_lib": ["幸敏環", "莊淑凰", "廖家誼"],
+      "shift_fri_night": ["劉奕呈", "莊淑凰", "陳素琴", "柯沛玨"],
+      "shift_sat_morn": ["辛慧晴", "劉奕呈", "廖家誼"],
+      "shift_sat_afternoon": ["劉奕呈", "黃玲瑜", "柯沛玨"]
     };
 
     const ADMIN_PASSWORD = "1914";
@@ -315,7 +313,7 @@
     };
 
     function loadTemplates() {
-      const stored = localStorage.getItem('puli_cart_templates_v3');
+      const stored = localStorage.getItem('puli_cart_templates_v4');
       if (stored) {
         try {
           shiftTemplates = JSON.parse(stored);
@@ -328,11 +326,11 @@
     }
 
     function saveTemplates() {
-      localStorage.setItem('puli_cart_templates_v3', JSON.stringify(shiftTemplates));
+      localStorage.setItem('puli_cart_templates_v4', JSON.stringify(shiftTemplates));
     }
 
     function loadStorageData() {
-      const stored = localStorage.getItem('puli_cart_shifts_v3');
+      const stored = localStorage.getItem('puli_cart_shifts_v4');
       if (stored) {
         try {
           registrations = JSON.parse(stored);
@@ -345,7 +343,7 @@
     }
 
     function saveStorageData() {
-      localStorage.setItem('puli_cart_shifts_v3', JSON.stringify(registrations));
+      localStorage.setItem('puli_cart_shifts_v4', JSON.stringify(registrations));
     }
 
     function initSeedData() {
@@ -412,8 +410,8 @@
 
     function renderAllViews() {
       const activeShifts = getCalculatedShiftDates();
-      renderRosterView(activeShifts);
       renderFormOptions(activeShifts);
+      renderRosterView(activeShifts);
     }
 
     function renderFormOptions(currentShifts = getCalculatedShiftDates()) {
@@ -421,41 +419,48 @@
       container.innerHTML = '';
 
       if (currentShifts.length === 0) {
-        container.innerHTML = `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-400">目前無可報名的時段</div>`;
+        container.innerHTML = `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-400">目前無可報名的時段，請點擊上方按鈕新增時段</div>`;
         return;
       }
 
       currentShifts.forEach(shift => {
         const list = registrations[shift.id] || [];
-        const isFull = list.length >= shift.maxCapacity;
 
-        const label = document.createElement('label');
-        label.className = `flex items-center justify-between p-3 border rounded-xl cursor-pointer transition select-none ${
-          isFull 
-            ? 'bg-slate-100/70 border-slate-200 opacity-60 cursor-not-allowed' 
-            : 'bg-white border-slate-200 hover:border-teal-500 hover:bg-teal-50/30'
-        }`;
+        const card = document.createElement('div');
+        card.className = 'flex flex-col sm:flex-row sm:items-center justify-between p-3.5 border rounded-xl bg-white border-slate-200 hover:border-teal-500 hover:bg-teal-50/20 transition gap-2 group';
 
-        label.innerHTML = `
-          <div class="flex items-center gap-3">
-            <input type="checkbox" name="shiftSelection" value="${shift.id}" ${isFull ? 'disabled' : ''} class="w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500">
-            <div>
+        card.innerHTML = `
+          <label class="flex items-center gap-3 cursor-pointer select-none flex-grow min-w-0">
+            <input type="checkbox" name="shiftSelection" value="${shift.id}" class="w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500 shrink-0">
+            <div class="min-w-0">
               <div class="font-bold text-slate-800 text-xs sm:text-sm">
                 ${shift.fullDateText} <span class="text-teal-700 ml-1 font-mono">${shift.time}</span>
               </div>
               <div class="text-2xs text-slate-500 mt-0.5">
-                <i class="fa-solid fa-location-dot text-rose-500 mr-0.5"></i> 地點：${shift.location}
+                <i class="fa-solid fa-location-dot text-rose-500 mr-0.5"></i> 地點：${escapeHtml(shift.location)}
               </div>
             </div>
+          </label>
+
+          <div class="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
+            <span class="text-2xs font-bold px-2.5 py-1 rounded-full ${
+              list.length > 0 ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-slate-500'
+            }">
+              ${list.length > 0 ? `已報名 ${list.length} 人` : '尚無人報名'}
+            </span>
+
+            <div class="flex items-center gap-1">
+              <button type="button" onclick="requestAdminAuth(() => openShiftModal('${shift.id}'))" class="p-1 px-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg text-2xs transition font-semibold" title="編輯時段">
+                <i class="fa-solid fa-pen-to-square"></i> 編輯
+              </button>
+              <button type="button" onclick="requestAdminAuth(() => confirmDeleteShift('${shift.id}'))" class="p-1 px-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg text-2xs transition font-semibold" title="刪除時段">
+                <i class="fa-solid fa-trash-can"></i> 刪除
+              </button>
+            </div>
           </div>
-          <span class="text-2xs font-bold px-2.5 py-1 rounded-full ${
-            isFull ? 'bg-rose-100 text-rose-700' : 'bg-teal-100 text-teal-800'
-          }">
-            ${isFull ? '已額滿' : `已報 ${list.length}/${shift.maxCapacity} 人`}
-          </span>
         `;
 
-        container.appendChild(label);
+        container.appendChild(card);
       });
     }
 
@@ -473,8 +478,6 @@
           rawList.some(p => p.name.toLowerCase().includes(searchQuery));
 
         if (!matchesQuery) return;
-
-        const isFull = rawList.length >= shift.maxCapacity;
 
         const shiftBox = document.createElement('div');
         shiftBox.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:border-slate-300 transition";
@@ -500,9 +503,9 @@
                 </button>
               </div>
               <span class="text-2xs font-bold px-2.5 py-1 rounded-full ${
-                isFull ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'
+                rawList.length > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
               }">
-                ${rawList.length} / ${shift.maxCapacity} 人
+                已報名 ${rawList.length} 人
               </span>
             </div>
           </div>
@@ -581,11 +584,6 @@
 
         if (!template) return;
 
-        if (currentList.length >= template.maxCapacity) {
-          showToast('error', `${template.location} 時段已額滿！`);
-          return;
-        }
-
         if (currentList.some(p => p.name === name)) {
           showToast('warning', `${name} 已在 ${template.location} 的名單中！`);
           return;
@@ -620,7 +618,6 @@
       const daySelect = document.getElementById('modalDayIndex');
       const timeInput = document.getElementById('modalTime');
       const locationInput = document.getElementById('modalLocation');
-      const maxInput = document.getElementById('modalMaxCapacity');
 
       if (shiftId) {
         const shift = shiftTemplates.find(s => s.id === shiftId);
@@ -630,14 +627,12 @@
         daySelect.value = shift.dayIndex;
         timeInput.value = shift.time;
         locationInput.value = shift.location;
-        maxInput.value = shift.maxCapacity;
       } else {
         title.innerText = '新增排班時段';
         editIdInput.value = '';
         daySelect.value = 2;
         timeInput.value = '';
         locationInput.value = '';
-        maxInput.value = 4;
       }
 
       modal.classList.remove('hidden');
@@ -653,7 +648,6 @@
       const dayIndex = parseInt(document.getElementById('modalDayIndex').value, 10);
       const time = document.getElementById('modalTime').value.trim();
       const location = document.getElementById('modalLocation').value.trim();
-      const maxCapacity = parseInt(document.getElementById('modalMaxCapacity').value, 10) || 4;
 
       if (!time || !location) {
         showToast('warning', '請完整填寫時間與地點！');
@@ -666,7 +660,6 @@
           shift.dayIndex = dayIndex;
           shift.time = time;
           shift.location = location;
-          shift.maxCapacity = maxCapacity;
         }
       } else {
         const newId = 'shift_' + Date.now();
@@ -674,8 +667,7 @@
           id: newId,
           dayIndex: dayIndex,
           time: time,
-          location: location,
-          maxCapacity: maxCapacity
+          location: location
         });
         registrations[newId] = [];
       }
@@ -816,7 +808,7 @@
       shifts.forEach(s => {
         const list = registrations[s.id] || [];
         const namesStr = list.length > 0 ? list.map(p => p.name).join('、') : '尚無人報名';
-        text += `📌 ${s.fullDateText} (${s.time})\n📍 地點: ${s.location}\n👤 名單: ${namesStr} (${list.length}/${s.maxCapacity}人)\n\n`;
+        text += `📌 ${s.fullDateText} (${s.time})\n📍 地點: ${s.location}\n👤 名單: ${namesStr} (${list.length}人)\n\n`;
       });
 
       copyToClipboard(text);
