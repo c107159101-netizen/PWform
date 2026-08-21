@@ -93,14 +93,6 @@
             <i id="adminLockIcon" class="fa-solid fa-lock text-amber-300"></i>
             <span id="adminStatusText">管理者權限: 已鎖定</span>
           </button>
-
-          <!-- Time Simulation Switcher -->
-          <button onclick="toggleTimeSimModal()" 
-            title="測試每週六 16:00 自動輪替日期機制"
-            class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-1">
-            <i class="fa-solid fa-vial text-teal-200"></i>
-            <span class="hidden sm:inline">時間模擬</span>
-          </button>
         </div>
 
       </div>
@@ -164,7 +156,7 @@
           <!-- Participant Optional Note Input -->
           <div class="space-y-1.5">
             <label for="userNoteInput" class="block text-sm font-bold text-slate-700">
-              備註說明 <span class="text-xs font-normal text-slate-400">(選填，例如：提早離開/稍微晚抵達)</span>
+              備註說明 <span class="text-xs font-normal text-slate-400">(選填，例如：稍微晚抵達/預計提早離開)</span>
             </label>
             <input type="text" id="userNoteInput" placeholder="填寫補充訊息..." 
               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition text-sm text-slate-800 placeholder-slate-400">
@@ -282,6 +274,7 @@
               <i id="passwordEyeIcon" class="fa-solid fa-eye"></i>
             </button>
           </div>
+          <p class="text-2xs text-slate-400 text-right mt-1">預設管理者密碼：<code class="bg-slate-100 px-1 py-0.5 rounded text-amber-600 font-bold">1914</code></p>
         </div>
 
         <div class="flex gap-2">
@@ -316,13 +309,13 @@
           <div>
             <label class="block font-bold text-slate-700 mb-1">輪值星期</label>
             <select id="shiftDayOffset" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-teal-500 outline-none">
-              <option value="1">星期一</option>
               <option value="2">星期二</option>
-              <option value="3">星期三</option>
-              <option value="4">星期四</option>
               <option value="5">星期五</option>
               <option value="6">星期六</option>
-              <option value="0">星期日</option>                            
+              <option value="0">星期日</option>
+              <option value="1">星期一</option>
+              <option value="3">星期三</option>
+              <option value="4">星期四</option>
             </select>
           </div>
           <div>
@@ -386,40 +379,6 @@
     </div>
   </div>
 
-  <!-- 4. 時間模擬測試彈窗 -->
-  <div id="timeSimModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-vial text-purple-600"></i>
-          <span>測試週六 16:00 自動換週</span>
-        </h3>
-        <button onclick="closeTimeSimModal()" class="text-slate-400 hover:text-slate-600 p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <p class="text-xs text-slate-500 leading-relaxed">
-        系統會在每週六 16:00 自動切換至下週的班表日期。您可手動切換時間情境進行預覽：
-      </p>
-
-      <div class="space-y-2 text-xs">
-        <button onclick="setSimulatedTime(false)" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-left font-medium flex items-center justify-between">
-          <span>1. 使用真實當前時間</span>
-          <i class="fa-solid fa-check text-teal-600" id="simModeRealIcon"></i>
-        </button>
-        <button onclick="setSimulatedTime(true)" class="w-full py-2.5 px-3 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-50 text-left font-medium text-purple-900 flex items-center justify-between">
-          <span>2. 模擬超過週六 16:00 (預覽下週)</span>
-          <i class="fa-solid fa-check text-purple-600 hidden" id="simModeNextIcon"></i>
-        </button>
-      </div>
-
-      <button onclick="closeTimeSimModal()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition">
-        完成
-      </button>
-    </div>
-  </div>
-
   <!-- JAVASCRIPT SYSTEM ENGINE -->
   <script>
     // System Constants & Storage Keys (Updated keys to prevent legacy cache error)
@@ -430,7 +389,6 @@
     // Application State
     let isAdminUnlocked = false;
     let pendingAdminCallback = null;
-    let isSimulatingNextWeek = false;
 
     // Default Templates
     const DEFAULT_SHIFTS = [
@@ -511,9 +469,6 @@
 
     function getTargetWeekDateInfo(dayOffset) {
       let now = new Date();
-      if (isSimulatingNextWeek) {
-        now.setDate(now.getDate() + 7);
-      }
 
       const currentDay = now.getDay(); // 0(Sun) - 6(Sat)
       const currentHour = now.getHours();
@@ -1067,28 +1022,6 @@
       } catch (err) {
         showToast("複製失敗，請手動選取文字複製", "error");
       }
-    }
-
-    function toggleTimeSimModal() {
-      const modal = document.getElementById("timeSimModal");
-      if (modal) modal.classList.toggle("hidden");
-    }
-
-    function closeTimeSimModal() {
-      const modal = document.getElementById("timeSimModal");
-      if (modal) modal.classList.add("hidden");
-    }
-
-    function setSimulatedTime(isNext) {
-      isSimulatingNextWeek = isNext;
-      const realIcon = document.getElementById("simModeRealIcon");
-      const nextIcon = document.getElementById("simModeNextIcon");
-      
-      if (realIcon) realIcon.classList.toggle("hidden", isNext);
-      if (nextIcon) nextIcon.classList.toggle("hidden", !isNext);
-      
-      renderAllViews();
-      showToast(isNext ? "已切換為：模擬週六 16:00 後 (預覽下週)" : "已還原為：真實時間", "info");
     }
 
     window.addEventListener("DOMContentLoaded", () => {
